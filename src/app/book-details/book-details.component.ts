@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { BookService } from '../service/book.service';
 import { AuthenticationService } from '../service/authentication.service';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-book-details',
@@ -9,25 +10,63 @@ import { AuthenticationService } from '../service/authentication.service';
 })
 export class BookDetailsComponent implements OnInit {
 
-  returnedString = "";
-  ceva = "random string";
+  book: any;
+  loading = true;
+  userRating = 0;
+  userReview = "";
+  bookReviews = [];
+
 
   constructor(
     private bookService: BookService,
-    private authService: AuthenticationService
+    private authService: AuthenticationService,
+    private activatedRoute : ActivatedRoute
   ) { }
 
   ngOnInit() {
-    this.authService.setAuthentication("alexa.murgoci@gmail.com","secret",["ROLE_ADMIN"]);
-    this.bookService.getBook().subscribe(
-      result => console.log("succes 1"),
-      error =>  console.log("error 1"));
-    this.bookService.saveBook(this.ceva).subscribe(
-      result => console.log("succes 2"),
-      error =>  console.log("error 2"));
-    this.bookService.getAdminData().subscribe(
-      result => console.log("succes 3"),
-      error =>  console.log("error 3"));
+    this.activatedRoute.url.subscribe(url =>{
+      this.getBook(url[1]);
+      this.getBookReviews(url[1]);
+    });
+    
+  }
+
+  getBook(isbn) {
+    this.bookService.getBook(isbn).subscribe(
+      (result) => {
+        this.book = result;
+        this.loading = false;
+        if(this.authService.isUserLogged())
+          this.bookService.getBookRatingForUser(this.authService.getUserId(), this.book.isbn).subscribe(
+            (result:{number:number}) => this.userRating = result.number
+          );
+      }
+    );
+  }
+
+  getBookReviews(isbn) {
+    this.bookService.getBookReviews(isbn).subscribe(
+      (result: any[]) => {
+        this.bookReviews = result;
+      },
+      () => this.bookReviews = []
+    );
+  }
+
+  onRate(event) {
+    this.bookService.rateBook(this.authService.getUserId(), this.book.isbn, this.userRating).subscribe();
+  }
+
+  onCancelRating() {
+    this.bookService.unRateBook(this.authService.getUserId(), this.book.isbn).subscribe();
+  }
+
+  saveReview() {
+    if(this.userReview != "") {
+      this.bookService.saveReview(this.authService.getUserId(), this.book.isbn, this.userReview).subscribe(
+        () => this.getBookReviews(this.book.isbn)
+      );
+    }
   }
 
 }
