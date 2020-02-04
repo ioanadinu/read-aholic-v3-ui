@@ -5,7 +5,8 @@
   <!-- recommendations -->
     <div class="mt-2 mb-5 col-md-12" *ngIf="authService.isUserLogged() && !loadingRecommendations">
       <h4 *ngIf="recommendations.length == 0">Rate at least 3 books and we'll recommend you 5 more!</h4>
-      <p-carousel *ngIf="recommendations.length > 0" [value]="recommendations" [numVisible]="3" [numScroll]="1" [autoplayInterval]="3000" [circular]="true">
+      <h4 *ngIf="recommendations.length > 0">Checkout out these books!</h4>
+      <p-carousel *ngIf="recommendations.length > 0" [value]="recommendations" [numVisible]="3" [numScroll]="1" [autoplayInterval]="8000" [circular]="true">
         <ng-template let-book pTemplate="item">
           <div class="ui-g-12 ui-md-3">
             <div>
